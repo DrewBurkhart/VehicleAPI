@@ -48,7 +48,6 @@ class CarController {
      */
     @GetMapping
     CollectionModel<EntityModel<Car>> list() {
-        System.out.println();
         List<EntityModel<Car>> resources = carService.list().stream().map(assembler::toModel)
                 .collect(Collectors.toList());
         return new CollectionModel<>(resources,
@@ -67,7 +66,8 @@ class CarController {
          * TODO: Use the `assembler` on that car and return the resulting output.
          *   Update the first line as part of the above implementing.
          */
-        return assembler.toModel(new Car());
+        Car car = carService.findById(id);
+        return assembler.toModel(car);
     }
 
     /**
@@ -83,7 +83,8 @@ class CarController {
          * TODO: Use the `assembler` on that saved car and return as part of the response.
          *   Update the first line as part of the above implementing.
          */
-        EntityModel<Car> resource = assembler.toModel(new Car());
+        carService.save(car);
+        EntityModel<Car> resource = assembler.toModel(car);
         return ResponseEntity.created(new URI(resource.getLink("self")
                 .orElse(new Link("self")).expand().getHref()))
                 .body(resource);
@@ -103,7 +104,9 @@ class CarController {
          * TODO: Use the `assembler` on that updated car and return as part of the response.
          *   Update the first line as part of the above implementing.
          */
-        EntityModel<Car> resource = assembler.toModel(new Car());
+        car.setId(id);
+        carService.save(car);
+        EntityModel<Car> resource = assembler.toModel(car);
         return ResponseEntity.ok(resource);
     }
 
@@ -117,6 +120,7 @@ class CarController {
         /**
          * TODO: Use the Car Service to delete the requested vehicle.
          */
+        carService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }
