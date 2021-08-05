@@ -78,6 +78,7 @@ public class CarControllerTest {
     @Test
     public void createCar() throws Exception {
         Car car = getCar();
+        car.setId(1L);
         mvc.perform(
                 post(new URI("/cars"))
                         .content(json.write(car).getJson())
@@ -105,7 +106,7 @@ public class CarControllerTest {
         // Retrieve list of cars from API
         // Help from https://www.baeldung.com/jackson-deserialize-json-unknown-properties,
         // https://stackoverflow.com/a/32624376, and https://stackoverflow.com/a/27605802
-        MvcResult response = this.mvc.perform(get("/cars")
+        MvcResult response = mvc.perform(get("/cars")
             .accept(MediaType.APPLICATION_JSON)
             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -139,7 +140,7 @@ public class CarControllerTest {
         expectedCar.setId(1L);
 
         // Retrieve single car from API
-        MvcResult response = this.mvc.perform(get("/cars/1")
+        MvcResult response = mvc.perform(get("/cars/1")
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -166,7 +167,7 @@ public class CarControllerTest {
          */
 
         // Delete car from getCar() below
-        this.mvc.perform(delete("/cars/1")
+        mvc.perform(delete("/cars/1")
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
