@@ -1,16 +1,15 @@
 package com.udacity.vehicles.api;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.udacity.vehicles.client.maps.MapsClient;
 import com.udacity.vehicles.client.prices.PriceClient;
 import com.udacity.vehicles.domain.Condition;
@@ -21,6 +20,7 @@ import com.udacity.vehicles.domain.manufacturer.Manufacturer;
 import com.udacity.vehicles.service.CarService;
 import java.net.URI;
 import java.util.Collections;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +33,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 /**
  * Implements testing of the CarController class.
@@ -80,8 +81,8 @@ public class CarControllerTest {
         mvc.perform(
                 post(new URI("/cars"))
                         .content(json.write(car).getJson())
-                        .contentType(MediaType.APPLICATION_JSON_UTF8)
-                        .accept(MediaType.APPLICATION_JSON_UTF8))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
     }
 
@@ -96,11 +97,30 @@ public class CarControllerTest {
          *   the whole list of vehicles. This should utilize the car from `getCar()`
          *   below (the vehicle will be the first in the list).
          */
-        this.mvc.perform(get("/cars")
+
+        // Get the car from getCar() below
+        Car expectedCar = getCar();
+        expectedCar.setId(1L);
+
+        // Retrieve list of cars from API
+        // Help from https://www.baeldung.com/jackson-deserialize-json-unknown-properties,
+        // https://stackoverflow.com/a/32624376, and https://stackoverflow.com/a/27605802
+        MvcResult response = this.mvc.perform(get("/cars")
             .accept(MediaType.APPLICATION_JSON)
             .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+            .andExpect(status().isOk()).andReturn();
 
+        // Get the first car from list
+        JSONObject responseJson = new JSONObject(response.getResponse().getContentAsString());
+        String car = responseJson.getJSONObject("_embedded").getJSONArray("carList").get(0).toString();
+
+        // Map the car to the object
+        ObjectMapper carMapper = new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        Car receivedCar = carMapper.readValue(car, Car.class);
+
+        // Compare
+        assertThat(receivedCar).usingRecursiveComparison().isEqualTo(expectedCar);
     }
 
     /**
@@ -113,6 +133,24 @@ public class CarControllerTest {
          * TODO: Add a test to check that the `get` method works by calling
          *   a vehicle by ID. This should utilize the car from `getCar()` below.
          */
+
+        // Get the car from getCar() below
+        Car expectedCar = getCar();
+        expectedCar.setId(1L);
+
+        // Retrieve single car from API
+        MvcResult response = this.mvc.perform(get("/cars/1")
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        // Map the car to the object
+        ObjectMapper carMapper = new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        Car receivedCar = carMapper.readValue(response.getResponse().getContentAsString(), Car.class);
+
+        // Compare
+        assertThat(receivedCar).usingRecursiveComparison().isEqualTo(expectedCar);
     }
 
     /**
@@ -126,6 +164,12 @@ public class CarControllerTest {
          *   when the `delete` method is called from the Car Controller. This
          *   should utilize the car from `getCar()` below.
          */
+
+        // Delete car from getCar() below
+        this.mvc.perform(delete("/cars/1")
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
     }
 
     /**
