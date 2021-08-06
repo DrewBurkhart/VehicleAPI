@@ -121,9 +121,9 @@ public class CarControllerTest {
         // Help from https://www.baeldung.com/jackson-deserialize-json-unknown-properties,
         // https://stackoverflow.com/a/32624376, and https://stackoverflow.com/a/27605802
         MvcResult response = mvc.perform(get("/cars")
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
+            .accept(MediaType.APPLICATION_JSON)
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
 
         // Get the first car from list
         JSONObject responseJson = new JSONObject(response.getResponse().getContentAsString());
