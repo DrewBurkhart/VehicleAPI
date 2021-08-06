@@ -3,9 +3,7 @@ package com.udacity.vehicles.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -85,6 +83,22 @@ public class CarControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
+    }
+
+    /**
+     * Tests for successful update of an existing car in the system
+     * @throws Exception when car update fails in the system
+     */
+    @Test
+    public void updateCar() throws Exception {
+        Car car = getCar();
+        car.setCondition(Condition.NEW);
+        mvc.perform(
+                put(new URI("/cars/1"))
+                        .content(json.write(car).getJson())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
     }
 
     /**
